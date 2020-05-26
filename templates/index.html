@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <div id="app">
+      <input v-model="username" placeholder="username">
+      <button v-on:click='setUsername()'>Login</button>
+      <h1> hello ${username}</h1>
+      <ol>
+        <li v-for="user in users">
+          ${user}
+        </li>
+      </ol>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+    var app = new Vue({
+      el: '#app',
+      data: {
+        username: '',
+        users: []
+      },
+      delimiters: ['${', '}'],
+      created: function () {
+        this.login()
+      },
+      methods: {
+        login () {
+          let username = localStorage.getItem('username')
+          if ( username != null) {
+            this.username = username
+            this.connect()
+          }
+        },
+        connect () {
+          console.log(this.username)
+          var socket = io('ws://localhost:5000')
+          username = this.username
+          socket.on('connect', function() {
+            socket.emit('join', {data: username})
+          })
+          socket.on('disconnect', function () {
+            socket.emit('leave', {data: username})
+          })
+          socket.on('join', (users) => {
+            this.users = users
+          })
+          socket.on('leave', (users) => {
+            this.users = users
+          })
+        },
+        setUsername () {
+          localStorage.setItem('username', this.username)
+          this.login()
+        }
+      }
+    })
+    </script>
+  </body>
+</html>
